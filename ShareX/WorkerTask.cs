@@ -27,7 +27,6 @@ using ShareX.HelpersLib;
 using ShareX.Properties;
 using ShareX.UploadersLib;
 using ShareX.UploadersLib.FileUploaders;
-using ShareX.UploadersLib.GUI;
 using ShareX.UploadersLib.HelperClasses;
 using ShareX.UploadersLib.ImageUploaders;
 using ShareX.UploadersLib.TextUploaders;
@@ -56,11 +55,19 @@ namespace ShareX
 
         public TaskStatus Status { get; private set; }
 
+        public bool IsBusy
+        {
+            get
+            {
+                return Status == TaskStatus.InQueue || IsWorking;
+            }
+        }
+
         public bool IsWorking
         {
             get
             {
-                return Status != TaskStatus.InQueue && Status != TaskStatus.Completed;
+                return Status == TaskStatus.Preparing || Status == TaskStatus.Working || Status == TaskStatus.Stopping;
             }
         }
 
@@ -82,6 +89,21 @@ namespace ShareX
         {
             Status = TaskStatus.InQueue;
             Info = new TaskInfo(taskSettings);
+        }
+
+        public static WorkerTask CreateHistoryTask(RecentTask recentTask)
+        {
+            WorkerTask task = new WorkerTask(null);
+            task.Status = TaskStatus.History;
+            task.Info.FilePath = recentTask.FilePath;
+            task.Info.FileName = recentTask.FileName;
+            task.Info.Result.URL = recentTask.URL;
+            task.Info.Result.ThumbnailURL = recentTask.ThumbnailURL;
+            task.Info.Result.DeletionURL = recentTask.DeletionURL;
+            task.Info.Result.ShortenedURL = recentTask.ShortenedURL;
+            task.Info.UploadTime = recentTask.Time.ToLocalTime();
+
+            return task;
         }
 
         public static WorkerTask CreateDataUploaderTask(EDataType dataType, Stream stream, string fileName, TaskSettings taskSettings)
@@ -836,6 +858,9 @@ namespace ShareX
                     {
                         DirectURL = Program.UploadersConfig.SomeImageDirectURL
                     };
+                    break;
+                case ImageDestination.Imgland:
+                    imageUploader = new ImglandUploader();
                     break;
                 case ImageDestination.CustomImageUploader:
                     CustomUploaderItem customUploader = GetCustomUploader(Program.UploadersConfig.CustomImageUploaderSelected);

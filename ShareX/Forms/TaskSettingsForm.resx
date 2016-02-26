@@ -601,7 +601,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblAfterTaskNotification.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 80</value>
+    <value>5, 56</value>
   </data>
   <data name="lblAfterTaskNotification.Size" type="System.Drawing.Size, System.Drawing">
     <value>117, 13</value>
@@ -625,7 +625,7 @@
     <value>0</value>
   </data>
   <data name="cboPopUpNotification.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 96</value>
+    <value>8, 72</value>
   </data>
   <data name="cboPopUpNotification.Size" type="System.Drawing.Size, System.Drawing">
     <value>224, 21</value>
@@ -675,36 +675,6 @@
   <data name="&gt;&gt;cbPlaySoundAfterUpload.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="cbHistorySave.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbHistorySave.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbHistorySave.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 56</value>
-  </data>
-  <data name="cbHistorySave.Size" type="System.Drawing.Size, System.Drawing">
-    <value>139, 17</value>
-  </data>
-  <data name="cbHistorySave.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="cbHistorySave.Text" xml:space="preserve">
-    <value>Save task info to history</value>
-  </data>
-  <data name="&gt;&gt;cbHistorySave.Name" xml:space="preserve">
-    <value>cbHistorySave</value>
-  </data>
-  <data name="&gt;&gt;cbHistorySave.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbHistorySave.Parent" xml:space="preserve">
-    <value>panelGeneral</value>
-  </data>
-  <data name="&gt;&gt;cbHistorySave.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="cbPlaySoundAfterCapture.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -733,7 +703,7 @@
     <value>panelGeneral</value>
   </data>
   <data name="&gt;&gt;cbPlaySoundAfterCapture.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="panelGeneral.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>

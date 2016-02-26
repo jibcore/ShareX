@@ -67,6 +67,7 @@ namespace ShareX
         {
             InitializeComponent();
 
+            Icon = ShareXResources.Icon;
             niTray.Icon = ShareXResources.Icon;
             Text = Program.Title;
 
@@ -150,6 +151,7 @@ namespace ShareX
             il.Images.Add(Resources.cross_button);
             il.Images.Add(Resources.tick_button);
             il.Images.Add(Resources.navigation_000_button);
+            il.Images.Add(Resources.clock);
             lvUploads.SmallImageList = il;
 
             TaskManager.ListViewControl = lvUploads;
@@ -176,9 +178,14 @@ namespace ShareX
 
             niTray.Visible = Program.Settings.ShowTray;
 
-            if (Program.Settings.RecentLinksRemember)
+            if (Program.Settings.RecentTasksSave)
             {
-                TaskManager.RecentManager.UpdateItems(Program.Settings.RecentLinks);
+                TaskManager.RecentManager.UpdateItems(Program.Settings.RecentTasks);
+
+                if (Program.Settings.RecentTasksShowInMainWindow && lvUploads.Items.Count == 0)
+                {
+                    TaskManager.AddRecentTasksToMainWindow();
+                }
             }
 
             bool isPositionChanged = false;
@@ -245,6 +252,11 @@ namespace ShareX
 
         private void AfterShownJobs()
         {
+            if (!Program.Settings.ShowMostRecentTaskFirst && lvUploads.Items.Count > 0)
+            {
+                lvUploads.Items[lvUploads.Items.Count - 1].EnsureVisible();
+            }
+
             if (Program.IsFirstTimeConfig)
             {
                 using (FirstTimeConfigForm firstTimeConfigForm = new FirstTimeConfigForm())
@@ -593,7 +605,7 @@ namespace ShareX
             HelpersOptions.UseAlternativeGetImage = !Program.Settings.UseDefaultClipboardGetImage;
             HelpersOptions.DefaultCopyImageFillBackground = Program.Settings.DefaultClipboardCopyImageFillBackground;
             HelpersOptions.BrowserPath = Program.Settings.BrowserPath;
-            TaskManager.RecentManager.MaxCount = Program.Settings.RecentLinksMaxCount;
+            TaskManager.RecentManager.MaxCount = Program.Settings.RecentTasksMaxCount;
 
             ConfigureAutoUpdate();
         }
@@ -1626,6 +1638,8 @@ namespace ShareX
 
         private void ExecuteJob(TaskSettings taskSettings, HotkeyType job)
         {
+            DebugHelper.WriteLine("Executing: " + job.GetLocalizedDescription());
+
             TaskSettings safeTaskSettings = TaskSettings.GetSafeTaskSettings(taskSettings);
 
             switch (job)
@@ -1881,7 +1895,11 @@ namespace ShareX
                     QuickTaskMenu quickTaskMenu = new QuickTaskMenu();
                     quickTaskMenu.TaskInfoSelected += taskInfo =>
                     {
-                        if (taskInfo.IsValid)
+                        if (taskInfo == null)
+                        {
+                            AfterCaptureRunTask(img, taskSettings);
+                        }
+                        else if (taskInfo.IsValid)
                         {
                             taskSettings.AfterCaptureJob = taskInfo.AfterCaptureTasks;
                             taskSettings.AfterUploadJob = taskInfo.AfterUploadTasks;

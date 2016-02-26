@@ -36,7 +36,7 @@ using System.Windows.Forms;
 
 namespace ShareX
 {
-    public partial class TaskSettingsForm : BaseForm
+    public partial class TaskSettingsForm : Form
     {
         public TaskSettings TaskSettings { get; private set; }
         public bool IsDefault { get; private set; }
@@ -47,6 +47,7 @@ namespace ShareX
         public TaskSettingsForm(TaskSettings hotkeySetting, bool isDefault = false)
         {
             InitializeComponent();
+            Icon = ShareXResources.Icon;
             TaskSettings = hotkeySetting;
             IsDefault = isDefault;
 
@@ -166,7 +167,6 @@ namespace ShareX
             cboPopUpNotification.Items.Clear();
             cboPopUpNotification.Items.AddRange(Helpers.GetLocalizedEnumDescriptions<PopUpNotificationType>());
             cboPopUpNotification.SelectedIndex = (int)TaskSettings.GeneralSettings.PopUpNotification;
-            cbHistorySave.Checked = TaskSettings.GeneralSettings.SaveHistory;
 
             // Image - General
             cbImageFormat.Items.AddRange(Enum.GetNames(typeof(EImageFormat)));
@@ -649,11 +649,6 @@ namespace ShareX
         private void cboPopUpNotification_SelectedIndexChanged(object sender, EventArgs e)
         {
             TaskSettings.GeneralSettings.PopUpNotification = (PopUpNotificationType)cboPopUpNotification.SelectedIndex;
-        }
-
-        private void cbHistorySave_CheckedChanged(object sender, EventArgs e)
-        {
-            TaskSettings.GeneralSettings.SaveHistory = cbHistorySave.Checked;
         }
 
         #endregion General

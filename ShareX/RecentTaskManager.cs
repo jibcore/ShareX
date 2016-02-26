@@ -31,7 +31,7 @@ using System.Windows.Forms;
 
 namespace ShareX
 {
-    public class RecentManager
+    public class RecentTaskManager
     {
         private int maxCount = 10;
 
@@ -47,9 +47,9 @@ namespace ShareX
 
                 lock (itemsLock)
                 {
-                    while (Items.Count > maxCount)
+                    while (Tasks.Count > maxCount)
                     {
-                        Items.Dequeue();
+                        Tasks.Dequeue();
                     }
 
                     UpdateRecentMenu();
@@ -57,40 +57,56 @@ namespace ShareX
             }
         }
 
-        public Queue<RecentItem> Items { get; private set; }
+        public Queue<RecentTask> Tasks { get; private set; }
 
         private static readonly object itemsLock = new object();
 
-        public RecentManager()
+        public RecentTaskManager()
         {
-            Items = new Queue<RecentItem>();
+            Tasks = new Queue<RecentTask>();
         }
 
-        public void Add(string item)
+        public void Add(WorkerTask task)
         {
-            if (!string.IsNullOrEmpty(item))
+            string info = task.Info.ToString();
+
+            if (!string.IsNullOrEmpty(info))
             {
-                lock (itemsLock)
+                RecentTask recentItem = new RecentTask()
                 {
-                    while (Items.Count >= MaxCount)
-                    {
-                        Items.Dequeue();
-                    }
+                    FilePath = task.Info.FilePath,
+                    URL = task.Info.Result.URL,
+                    ThumbnailURL = task.Info.Result.ThumbnailURL,
+                    DeletionURL = task.Info.Result.DeletionURL,
+                    ShortenedURL = task.Info.Result.ShortenedURL
+                };
 
-                    Items.Enqueue(new RecentItem(item));
-
-                    UpdateRecentMenu();
-                }
+                Add(recentItem);
             }
         }
 
-        public void UpdateItems(RecentItem[] items)
+        public void Add(RecentTask task)
         {
-            if (items != null)
+            lock (itemsLock)
+            {
+                while (Tasks.Count >= MaxCount)
+                {
+                    Tasks.Dequeue();
+                }
+
+                Tasks.Enqueue(task);
+
+                UpdateRecentMenu();
+            }
+        }
+
+        public void UpdateItems(RecentTask[] tasks)
+        {
+            if (tasks != null)
             {
                 lock (itemsLock)
                 {
-                    Items = new Queue<RecentItem>(items);
+                    Tasks = new Queue<RecentTask>(tasks);
 
                     UpdateRecentMenu();
                 }
@@ -99,7 +115,7 @@ namespace ShareX
 
         private void UpdateRecentMenu()
         {
-            if (Program.MainForm == null || Program.MainForm.tsmiTrayRecentItems == null || Items.Count == 0)
+            if (!Program.Settings.RecentTasksShowInTrayMenu || Program.MainForm == null || Program.MainForm.tsmiTrayRecentItems == null || Tasks.Count == 0)
             {
                 return;
             }
@@ -117,11 +133,12 @@ namespace ShareX
             tsmi.DropDownItems.Add(tsmiTip);
             tsmi.DropDownItems.Add(new ToolStripSeparator());
 
-            foreach (RecentItem recentItem in Items)
+            foreach (RecentTask task in Tasks)
             {
-                ToolStripMenuItem tsmiLink = new ToolStripMenuItem(recentItem.ToString());
-                tsmiLink.ToolTipText = recentItem.Text;
-                string link = recentItem.Text;
+                ToolStripMenuItem tsmiLink = new ToolStripMenuItem();
+                tsmiLink.Text = task.TrayMenuText;
+                string link = task.ToString();
+                tsmiLink.ToolTipText = link;
                 tsmiLink.MouseUp += (sender, e) =>
                 {
                     if (e.Button == MouseButtons.Left)
@@ -133,7 +150,8 @@ namespace ShareX
                         URLHelpers.OpenURL(link);
                     }
                 };
-                if (Program.Settings.ShowMostRecentLinkFirst)
+
+                if (Program.Settings.RecentTasksTrayMenuMostRecentFirst)
                 {
                     tsmi.DropDownItems.Insert(2, tsmiLink);
                 }
@@ -142,23 +160,6 @@ namespace ShareX
                     tsmi.DropDownItems.Add(tsmiLink);
                 }
             }
-        }
-    }
-
-    public class RecentItem
-    {
-        public string Text { get; set; }
-        public DateTime Time { get; set; }
-
-        public RecentItem(string text)
-        {
-            Text = text;
-            Time = DateTime.Now;
-        }
-
-        public override string ToString()
-        {
-            return string.Format("[{0:HH:mm:ss}] {1}", Time, Text.Truncate(50, "...", false));
         }
     }
 }

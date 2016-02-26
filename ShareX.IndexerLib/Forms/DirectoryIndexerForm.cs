@@ -26,10 +26,11 @@
 using ShareX.HelpersLib;
 using System;
 using System.IO;
+using System.Windows.Forms;
 
 namespace ShareX.IndexerLib
 {
-    public partial class DirectoryIndexerForm : BaseForm
+    public partial class DirectoryIndexerForm : Form
     {
         public delegate void UploadRequestedEventHandler(string source);
         public event UploadRequestedEventHandler UploadRequested;
@@ -40,6 +41,7 @@ namespace ShareX.IndexerLib
         public DirectoryIndexerForm(IndexerSettings settings)
         {
             InitializeComponent();
+            Icon = ShareXResources.Icon;
             Settings = settings;
             pgSettings.SelectedObject = Settings;
             BrowseFolder();
@@ -52,7 +54,7 @@ namespace ShareX.IndexerLib
 
         private void BrowseFolder()
         {
-            // Translate
+            // TODO: Translate
             if (Helpers.BrowseFolder("ShareX - Choose folder path", txtFolderPath))
             {
                 IndexFolder();

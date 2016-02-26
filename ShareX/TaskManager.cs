@@ -42,13 +42,13 @@ namespace ShareX
         {
             get
             {
-                return Tasks.Count > 0 && Tasks.Any(task => task.Status != TaskStatus.Completed);
+                return Tasks.Count > 0 && Tasks.Any(task => task.IsBusy);
             }
         }
 
         private static readonly List<WorkerTask> Tasks = new List<WorkerTask>();
 
-        public static readonly RecentManager RecentManager = new RecentManager();
+        public static readonly RecentTaskManager RecentManager = new RecentTaskManager();
 
         private static int lastIconStatus = -1;
 
@@ -58,12 +58,21 @@ namespace ShareX
             {
                 Tasks.Add(task);
                 UpdateMainFormTip();
-                task.StatusChanged += task_StatusChanged;
-                task.UploadStarted += task_UploadStarted;
-                task.UploadProgressChanged += task_UploadProgressChanged;
-                task.UploadCompleted += task_UploadCompleted;
+
+                if (task.Status != TaskStatus.History)
+                {
+                    task.StatusChanged += task_StatusChanged;
+                    task.UploadStarted += task_UploadStarted;
+                    task.UploadProgressChanged += task_UploadProgressChanged;
+                    task.UploadCompleted += task_UploadCompleted;
+                }
+
                 CreateListViewItem(task);
-                StartTasks();
+
+                if (task.Status != TaskStatus.History)
+                {
+                    StartTasks();
+                }
             }
         }
 
@@ -161,18 +170,42 @@ namespace ShareX
             {
                 TaskInfo info = task.Info;
 
-                DebugHelper.WriteLine("Task in queue. Job: {0}, Type: {1}, Host: {2}", info.Job, info.UploadDestination, info.UploaderHost);
+                if (task.Status != TaskStatus.History)
+                {
+                    DebugHelper.WriteLine("Task in queue. Job: {0}, Type: {1}, Host: {2}", info.Job, info.UploadDestination, info.UploaderHost);
+                }
 
                 ListViewItem lvi = new ListViewItem();
                 lvi.Tag = task;
                 lvi.Text = info.FileName;
-                lvi.SubItems.Add(Resources.TaskManager_CreateListViewItem_In_queue);
+
+                if (task.Status == TaskStatus.History)
+                {
+                    // TODO: Translate
+                    lvi.SubItems.Add("History");
+                    lvi.SubItems.Add(task.Info.UploadTime.ToString());
+                }
+                else
+                {
+                    lvi.SubItems.Add(Resources.TaskManager_CreateListViewItem_In_queue);
+                    lvi.SubItems.Add(string.Empty);
+                }
+
                 lvi.SubItems.Add(string.Empty);
                 lvi.SubItems.Add(string.Empty);
                 lvi.SubItems.Add(string.Empty);
-                lvi.SubItems.Add(string.Empty);
-                lvi.SubItems.Add(string.Empty);
-                lvi.ImageIndex = 3;
+
+                if (task.Status == TaskStatus.History)
+                {
+                    lvi.SubItems.Add(task.Info.ToString());
+                    lvi.ImageIndex = 4;
+                }
+                else
+                {
+                    lvi.SubItems.Add(string.Empty);
+                    lvi.ImageIndex = 3;
+                }
+
                 if (Program.Settings.ShowMostRecentTaskFirst)
                 {
                     ListViewControl.Items.Insert(0, lvi);
@@ -181,6 +214,7 @@ namespace ShareX
                 {
                     ListViewControl.Items.Add(lvi);
                 }
+
                 lvi.EnsureVisible();
                 ListViewControl.FillLastColumn();
             }
@@ -306,21 +340,21 @@ namespace ShareX
 
                             if (!task.StopRequested && !string.IsNullOrEmpty(result))
                             {
-                                if (info.TaskSettings.GeneralSettings.SaveHistory && (!info.TaskSettings.AdvancedSettings.HistorySaveOnlyURL ||
+                                if (Program.Settings.HistorySaveTasks && (!Program.Settings.HistoryCheckURL ||
                                    (!string.IsNullOrEmpty(info.Result.URL) || !string.IsNullOrEmpty(info.Result.ShortenedURL))))
                                 {
                                     HistoryManager.AddHistoryItemAsync(Program.HistoryFilePath, info.GetHistoryItem());
                                 }
 
-                                RecentManager.Add(result);
+                                RecentManager.Add(task);
 
-                                if (Program.Settings.RecentLinksRemember)
+                                if (Program.Settings.RecentTasksSave)
                                 {
-                                    Program.Settings.RecentLinks = RecentManager.Items.ToArray();
+                                    Program.Settings.RecentTasks = RecentManager.Tasks.ToArray();
                                 }
                                 else
                                 {
-                                    Program.Settings.RecentLinks = null;
+                                    Program.Settings.RecentTasks = null;
                                 }
 
                                 if (!info.TaskSettings.AdvancedSettings.DisableNotifications && info.Job != TaskJob.ShareURL)
@@ -466,6 +500,15 @@ namespace ShareX
                 }
 
                 lastIconStatus = progress;
+            }
+        }
+
+        public static void AddRecentTasksToMainWindow()
+        {
+            foreach (RecentTask recentTask in RecentManager.Tasks)
+            {
+                WorkerTask task = WorkerTask.CreateHistoryTask(recentTask);
+                Start(task);
             }
         }
     }
